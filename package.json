@@ -1,0 +1,21 @@
+{
+  "name": "recipe-explorer",
+  "version": "1.0.0",
+  "description": "A recipe application using TheMealDB API to learn async JavaScript",
+  "main": "src/app.js",
+  "type": "module",
+  "scripts": {
+    "start": "node src/app.js",
+    "init-data": "node utils/init-data.js",
+    "test": "vitest run",
+    "test:watch": "vitest"
+  },
+  "author": "",
+  "license": "MIT",
+  "devDependencies": {
+    "vitest": "^3.0.8"
+  },
+  "dependencies": {
+    "readline-sync": "^1.4.10"
+  }
+}

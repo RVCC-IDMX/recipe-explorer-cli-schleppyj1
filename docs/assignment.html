@@ -1,0 +1,502 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Recipe Explorer Assignment</title>
+  <style>
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      line-height: 1.6;
+      max-width: 800px;
+      margin: 0 auto;
+      padding: 20px;
+      color: #333;
+    }
+    h1, h2, h3 {
+      color: #0056b3;
+    }
+    pre, code {
+      background-color: #f5f5f5;
+      border-radius: 3px;
+      padding: 2px 5px;
+      font-family: 'Courier New', Courier, monospace;
+    }
+    pre {
+      padding: 10px;
+      overflow-x: auto;
+    }
+    .challenge {
+      margin-bottom: 30px;
+      padding: 15px;
+      border-left: 4px solid #0056b3;
+      background-color: #f8f9fa;
+    }
+    .challenge h3 {
+      margin-top: 0;
+    }
+    table {
+      border-collapse: collapse;
+      width: 100%;
+      margin: 20px 0;
+    }
+    table, th, td {
+      border: 1px solid #ddd;
+    }
+    th, td {
+      padding: 12px 15px;
+      text-align: left;
+    }
+    th {
+      background-color: #f2f2f2;
+    }
+    .tip {
+      background-color: #e7f5ff;
+      padding: 10px;
+      border-left: 4px solid #4da6ff;
+      margin: 15px 0;
+    }
+  </style>
+</head>
+<body>
+  <h1>Recipe Explorer: Asynchronous JavaScript Assignment</h1>
+  
+  <h2>Overview</h2>
+  <p>
+    In this assignment, you'll build a recipe exploration application using asynchronous JavaScript. 
+    The application connects to TheMealDB API to search for recipes, manages favorites, and implements 
+    a caching system to optimize API calls. Throughout this process, you'll learn and practice key 
+    asynchronous programming concepts like Promises, async/await, error handling, and more.
+  </p>
+
+  <h2>Learning Objectives</h2>
+  <ul>
+    <li>Understand and implement various Promise patterns (chaining, all, race)</li>
+    <li>Work with the async/await syntax for cleaner asynchronous code</li>
+    <li>Implement proper error handling for asynchronous operations</li>
+    <li>Create a caching system for API responses</li>
+    <li>Manage file I/O operations with promises</li>
+    <li>Build a complete command-line application with asynchronous functionality</li>
+  </ul>
+
+  <h2>Project Structure</h2>
+  <p>
+    The project is organized into several modules, each focusing on specific functionality:
+  </p>
+
+  <table>
+    <tr>
+      <th>Module</th>
+      <th>File</th>
+      <th>Description</th>
+    </tr>
+    <tr>
+      <td>API</td>
+      <td>src/api.js</td>
+      <td>Functions for interacting with TheMealDB API</td>
+    </tr>
+    <tr>
+      <td>Cache</td>
+      <td>src/cache.js</td>
+      <td>Caching system to store API responses locally</td>
+    </tr>
+    <tr>
+      <td>Favorites</td>
+      <td>src/favorites.js</td>
+      <td>Functions to manage favorite recipes</td>
+    </tr>
+    <tr>
+      <td>App</td>
+      <td>src/app.js</td>
+      <td>Main application logic and CLI interface</td>
+    </tr>
+    <tr>
+      <td>Utils</td>
+      <td>src/utils.js</td>
+      <td>Helper functions for formatting and utility operations</td>
+    </tr>
+  </table>
+
+  <h2>Getting Started</h2>
+  <ol>
+    <li>Clone the repository</li>
+    <li>Run <code>npm install</code> to install dependencies</li>
+    <li>Run <code>npm run init-data</code> to initialize data directories</li>
+    <li>Start working on challenges marked with <code>// CHALLENGE X:</code> comments</li>
+    <li>Run <code>npm test</code> to test your implementations</li>
+    <li>Run <code>npm start</code> to start the application</li>
+  </ol>
+
+  <div class="tip">
+    <strong>Tip:</strong> Complete the challenges in order as they build upon each other. 
+    The API module should be completed first, followed by the Cache module, then Favorites, 
+    and finally the App module.
+  </div>
+
+  <h2>Challenge List</h2>
+
+  <h3>API Module (src/api.js)</h3>
+  <div class="challenge">
+    <h3>Challenge 1: Implement searchMealsByName function</h3>
+    <p>
+      Create a function that searches for meals by name using TheMealDB API. The function should:
+    </p>
+    <ul>
+      <li>Use the fetch API to make a request</li>
+      <li>Handle the response and parse the JSON</li>
+      <li>Return an array of results or an empty array</li>
+      <li>Implement proper error handling using try/catch</li>
+    </ul>
+  </div>
+
+  <div class="challenge">
+    <h3>Challenge 2: Implement getMealById function with retry logic</h3>
+    <p>
+      Create a function that gets details of a specific meal by ID. The function should:
+    </p>
+    <ul>
+      <li>Fetch meal details from the API</li>
+      <li>Implement retry logic that attempts the request again if it fails</li>
+      <li>Return the meal details object or null if not found</li>
+      <li>Handle errors appropriately</li>
+    </ul>
+  </div>
+
+  <div class="challenge">
+    <h3>Challenge 3: Implement searchMealsByFirstLetter using Promise.all</h3>
+    <p>
+      Create a function that searches for recipes starting with specific letters. The function should:
+    </p>
+    <ul>
+      <li>Make parallel requests for each letter using Promise.all</li>
+      <li>Combine the results and remove duplicates</li>
+      <li>Handle errors for individual requests without failing all requests</li>
+    </ul>
+  </div>
+
+  <div class="challenge">
+    <h3>Challenge 4: Implement getMealsByIngredient with timeout using Promise.race</h3>
+    <p>
+      Create a function that searches for recipes containing a specific ingredient. The function should:
+    </p>
+    <ul>
+      <li>Implement a timeout using Promise.race</li>
+      <li>Return a user-friendly error message if the request times out</li>
+      <li>Otherwise return the search results</li>
+    </ul>
+  </div>
+
+  <div class="challenge">
+    <h3>Challenge 5: Implement getRelatedRecipes function</h3>
+    <p>
+      Create a function that finds recipes related to a given recipe by category. The function should:
+    </p>
+    <ul>
+      <li>Extract the category from the input recipe</li>
+      <li>Fetch recipes in the same category</li>
+      <li>Remove the original recipe from the results if present</li>
+      <li>Limit the number of results returned</li>
+    </ul>
+  </div>
+
+  <div class="challenge">
+    <h3>Challenge 6: Implement getRandomMeal function</h3>
+    <p>
+      Create a function that gets a random recipe from the API. The function should:
+    </p>
+    <ul>
+      <li>Fetch a random meal from the API's random endpoint</li>
+      <li>Process the response and return the meal object</li>
+      <li>Handle errors appropriately</li>
+    </ul>
+  </div>
+
+  <h3>Cache Module (src/cache.js)</h3>
+  <div class="challenge">
+    <h3>Challenge 7: Implement initializeCache function</h3>
+    <p>
+      Create a function that initializes the cache file if it doesn't exist. The function should:
+    </p>
+    <ul>
+      <li>Check if the cache file exists</li>
+      <li>Create the directory and file if they don't exist</li>
+      <li>Initialize the cache file with an empty object</li>
+      <li>Handle any errors that might occur</li>
+    </ul>
+  </div>
+
+  <div class="challenge">
+    <h3>Challenge 8: Implement getFromCache function</h3>
+    <p>
+      Create a function that retrieves data from the cache if it exists and hasn't expired. The function should:
+    </p>
+    <ul>
+      <li>Read and parse the cache file</li>
+      <li>Check if the requested key exists</li>
+      <li>Verify if the data is still fresh (not expired)</li>
+      <li>Return the data or null if not found/expired</li>
+    </ul>
+  </div>
+
+  <div class="challenge">
+    <h3>Challenge 9: Implement saveToCache function</h3>
+    <p>
+      Create a function that saves data to the cache with a timestamp. The function should:
+    </p>
+    <ul>
+      <li>Ensure the cache is initialized</li>
+      <li>Read the current cache data</li>
+      <li>Add the new data with a current timestamp</li>
+      <li>Write the updated cache back to the file</li>
+    </ul>
+  </div>
+
+  <div class="challenge">
+    <h3>Challenge 10: Implement clearExpiredCache function</h3>
+    <p>
+      Create a function that removes expired entries from the cache. The function should:
+    </p>
+    <ul>
+      <li>Read the cache file and check each entry</li>
+      <li>Remove entries that have expired</li>
+      <li>Save the updated cache if any entries were removed</li>
+      <li>Return the count of removed entries</li>
+    </ul>
+  </div>
+
+  <div class="challenge">
+    <h3>Challenge 11: Implement getCachedOrFetch function</h3>
+    <p>
+      Create a function that gets data from cache or fetches it if not available. The function should:
+    </p>
+    <ul>
+      <li>Check the cache for the requested data first</li>
+      <li>If not found or expired, call the provided fetch function</li>
+      <li>Save the newly fetched data to cache</li>
+      <li>Implement fallback to expired cache if fetch fails</li>
+    </ul>
+  </div>
+
+  <h3>Favorites Module (src/favorites.js)</h3>
+  <div class="challenge">
+    <h3>Challenge 12: Implement initializeFavorites function</h3>
+    <p>
+      Create a function that initializes the favorites file if it doesn't exist. The function should:
+    </p>
+    <ul>
+      <li>Check if the favorites file exists</li>
+      <li>Create the directory and file if they don't exist</li>
+      <li>Initialize the favorites file with an empty array</li>
+      <li>Handle any errors that might occur</li>
+    </ul>
+  </div>
+
+  <div class="challenge">
+    <h3>Challenge 13: Implement getFavorites function</h3>
+    <p>
+      Create a function that retrieves all favorite recipes. The function should:
+    </p>
+    <ul>
+      <li>Ensure the favorites file exists</li>
+      <li>Read and parse the favorites file</li>
+      <li>Return the array of favorites or an empty array if there's an error</li>
+    </ul>
+  </div>
+
+  <div class="challenge">
+    <h3>Challenge 14: Implement addFavorite function</h3>
+    <p>
+      Create a function that adds a recipe to favorites. The function should:
+    </p>
+    <ul>
+      <li>Check if the recipe already exists in favorites</li>
+      <li>Add the recipe to favorites if it doesn't exist</li>
+      <li>Save the updated favorites to the file</li>
+      <li>Return true if successful, false otherwise</li>
+    </ul>
+  </div>
+
+  <div class="challenge">
+    <h3>Challenge 15: Implement removeFavorite function</h3>
+    <p>
+      Create a function that removes a recipe from favorites. The function should:
+    </p>
+    <ul>
+      <li>Filter out the recipe with the matching ID</li>
+      <li>Save the updated favorites to the file if the recipe was found</li>
+      <li>Return true if removed, false if not found or error</li>
+    </ul>
+  </div>
+
+  <div class="challenge">
+    <h3>Challenge 16: Implement isInFavorites function</h3>
+    <p>
+      Create a function that checks if a recipe is in favorites. The function should:
+    </p>
+    <ul>
+      <li>Get the favorites array</li>
+      <li>Check if any recipe has a matching ID</li>
+      <li>Return true if found, false otherwise</li>
+    </ul>
+  </div>
+
+  <div class="challenge">
+    <h3>Challenge 17: Implement getFavoriteById function</h3>
+    <p>
+      Create a function that gets a specific favorite recipe by ID. The function should:
+    </p>
+    <ul>
+      <li>Get the favorites array</li>
+      <li>Find the recipe with the matching ID</li>
+      <li>Return the recipe object or null if not found</li>
+    </ul>
+  </div>
+
+  <h3>Application Module (src/app.js)</h3>
+  <div class="challenge">
+    <h3>Challenge 18: Implement initialize function</h3>
+    <p>
+      Create a function that initializes the application. The function should:
+    </p>
+    <ul>
+      <li>Initialize both cache and favorites systems in parallel using Promise.all</li>
+      <li>Clear expired cache entries</li>
+      <li>Handle any errors that occur during initialization</li>
+    </ul>
+  </div>
+
+  <div class="challenge">
+    <h3>Challenge 19: Implement searchRecipes function</h3>
+    <p>
+      Complete the searchRecipes function to search for recipes with caching. The function should:
+    </p>
+    <ul>
+      <li>Create a cache key for the search</li>
+      <li>Use the caching system to get results from cache or API</li>
+      <li>Display the results and offer to view details</li>
+    </ul>
+  </div>
+
+  <div class="challenge">
+    <h3>Challenge 20: Implement viewRecipeDetails function</h3>
+    <p>
+      Complete the viewRecipeDetails function to display recipe details. The function should:
+    </p>
+    <ul>
+      <li>Get recipe details using the cache or API</li>
+      <li>Display the recipe details</li>
+      <li>Check if it's in favorites and offer to add/remove</li>
+      <li>Use Promise chaining (.then/.catch) to fetch and display related recipes</li>
+    </ul>
+  </div>
+
+  <div class="challenge">
+    <h3>Challenge 21: Implement exploreByFirstLetter function</h3>
+    <p>
+      Complete the exploreByFirstLetter function to search recipes by first letter. The function should:
+    </p>
+    <ul>
+      <li>Use the caching system to get results</li>
+      <li>Display the results and offer to view details</li>
+    </ul>
+  </div>
+
+  <div class="challenge">
+    <h3>Challenge 22: Implement searchByIngredient function</h3>
+    <p>
+      Complete the searchByIngredient function to search recipes by ingredient. The function should:
+    </p>
+    <ul>
+      <li>Use the caching system to get results</li>
+      <li>Handle timeout error messages appropriately</li>
+      <li>Display the results and offer to view details</li>
+    </ul>
+  </div>
+
+  <div class="challenge">
+    <h3>Challenge 23: Implement discoverRandom function</h3>
+    <p>
+      Complete the discoverRandom function to fetch and display a random recipe. The function should:
+    </p>
+    <ul>
+      <li>Create multiple promises for random recipes</li>
+      <li>Use Promise.race to get the first one that resolves</li>
+      <li>Display the recipe and check favorite status</li>
+    </ul>
+  </div>
+
+  <div class="challenge">
+    <h3>Challenge 24: Implement main function</h3>
+    <p>
+      Complete the main function to start the application. The function should:
+    </p>
+    <ul>
+      <li>Initialize the application</li>
+      <li>Handle initialization success/failure</li>
+      <li>Start the main menu loop</li>
+      <li>Add error handling for uncaught exceptions</li>
+    </ul>
+  </div>
+
+  <h2>Testing Your Solutions</h2>
+  <p>
+    Each module has a corresponding test file in the <code>test/</code> directory. As you complete 
+    challenges, run the tests to verify your implementation:
+  </p>
+  <pre><code>npm test</code></pre>
+  
+  <p>
+    You can also run tests for individual modules:
+  </p>
+  <pre><code>npm test -- api.test.js
+npm test -- cache.test.js
+npm test -- favorites.test.js</code></pre>
+
+  <h2>Running the Application</h2>
+  <p>
+    Once you've completed the challenges, run the application:
+  </p>
+  <pre><code>npm start</code></pre>
+  
+  <p>
+    Test out different features to see your code in action:
+  </p>
+  <ul>
+    <li>Search for recipes by name (try terms like "chicken", "pasta", "cake")</li>
+    <li>View recipe details</li>
+    <li>Search by first letter(s)</li>
+    <li>Search by ingredient</li>
+    <li>Add and remove favorites</li>
+    <li>Discover random recipes</li>
+  </ul>
+
+  <div class="tip">
+    <strong>Tip:</strong> Pay attention to how the caching system works. The first time you search for 
+    something, it will fetch from the API. If you search for the same term again, it should use the 
+    cached data (you'll see "Cache hit" messages in the console).
+  </div>
+
+  <h2>Extensions</h2>
+  <p>
+    If you finish the main challenges and want to extend the project, here are some ideas:
+  </p>
+  <ul>
+    <li>Add pagination for large result sets</li>
+    <li>Implement a recipe recommendation system based on ingredients</li>
+    <li>Add the ability to modify favorite recipes (add notes, change instructions)</li>
+    <li>Create a recipe meal plan generator</li>
+    <li>Add export/import functionality for favorites</li>
+  </ul>
+
+  <h2>Next Steps</h2>
+  <p>
+    After completing this Node.js project, the next phase will be to build a web-based version using 
+    the browser's fetch API, localStorage for persistence, and DOM manipulation for the user interface.
+  </p>
+  
+  <p>
+    For more details on the asynchronous JavaScript concepts covered in this project, see the 
+    <a href="async-tutorial.html">Async Tutorial</a>.
+  </p>
+</body>
+</html>

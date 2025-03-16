@@ -1,0 +1,501 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Asynchronous JavaScript Tutorial</title>
+  <style>
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      line-height: 1.6;
+      max-width: 800px;
+      margin: 0 auto;
+      padding: 20px;
+      color: #333;
+    }
+
+    h1,
+    h2,
+    h3 {
+      color: #0056b3;
+    }
+
+    pre,
+    code {
+      background-color: #f5f5f5;
+      border-radius: 3px;
+      padding: 2px 5px;
+      font-family: 'Courier New', Courier, monospace;
+    }
+
+    pre {
+      padding: 10px;
+      overflow-x: auto;
+    }
+
+    .example {
+      margin-bottom: 30px;
+      padding: 15px;
+      border-left: 4px solid #28a745;
+      background-color: #f8f9fa;
+    }
+
+    .example h3 {
+      color: #28a745;
+      margin-top: 0;
+    }
+
+    .note {
+      background-color: #fff3cd;
+      padding: 10px;
+      border-left: 4px solid #ffc107;
+      margin: 15px 0;
+    }
+
+    .pattern {
+      background-color: #e7f5ff;
+      padding: 15px;
+      border-left: 4px solid #4da6ff;
+      margin: 15px 0;
+    }
+
+    .diagram {
+      margin: 20px 0;
+      text-align: center;
+    }
+
+    .compare {
+      display: flex;
+      justify-content: space-between;
+      margin: 20px 0;
+    }
+
+    .compare>div {
+      width: 48%;
+    }
+
+    .compare h4 {
+      text-align: center;
+      margin-top: 0;
+    }
+  </style>
+</head>
+
+<body>
+  <h1>Asynchronous JavaScript Tutorial</h1>
+
+  <h2>Introduction to Asynchronous Programming</h2>
+  <p>
+    JavaScript is single-threaded, meaning it can only execute one operation at a time. However,
+    many operations in web and Node.js development are time-consuming, such as:
+  </p>
+  <ul>
+    <li>Fetching data from an API</li>
+    <li>Reading and writing files</li>
+    <li>Performing database operations</li>
+    <li>Waiting for user input</li>
+  </ul>
+  <p>
+    Asynchronous programming allows JavaScript to perform these operations without blocking the
+    execution of other code. This is essential for building responsive applications.
+  </p>
+
+  <h2>Promises: The Foundation of Modern Async JavaScript</h2>
+  <p>
+    A Promise in JavaScript represents a value that might not be available yet but will be resolved
+    at some point in the future. Promises can be in one of three states:
+  </p>
+  <ul>
+    <li><strong>Pending</strong>: Initial state, neither fulfilled nor rejected</li>
+    <li><strong>Fulfilled</strong>: The operation completed successfully</li>
+    <li><strong>Rejected</strong>: The operation failed</li>
+  </ul>
+
+  <div class="example">
+    <h3>Basic Promise Example</h3>
+    <pre><code>// Creating a promise
+const myPromise = new Promise((resolve, reject) =&gt; {
+  // Simulating an asynchronous operation
+  setTimeout(() =&gt; {
+    const success = true;
+
+    if (success) {
+      resolve('Operation succeeded!'); // Promise fulfilled
+    } else {
+      reject(new Error('Operation failed!')); // Promise rejected
+    }
+  }, 1000);
+});
+
+// Using the promise
+myPromise
+  .then(result =&gt; {
+    console.log(result); // 'Operation succeeded!'
+  })
+  .catch(error =&gt; {
+    console.error(error); // Only runs if the promise is rejected
+  });</code></pre>
+  </div>
+
+  <h2>Key Promise Patterns</h2>
+
+  <div class="pattern">
+    <h3>1. Promise Chaining</h3>
+    <p>
+      Promise chaining allows you to perform a sequence of asynchronous operations one after another.
+      Each <code>.then()</code> returns a new promise that can be used for the next step.
+    </p>
+    <pre><code>// In our Recipe Explorer project:
+api.getRelatedRecipes(recipe)
+  .then(relatedRecipes =&gt; {
+    // Process the related recipes
+    console.log('Found related recipes:', relatedRecipes.length);
+    return displayRecipes(relatedRecipes); // Returns another promise
+  })
+  .then(() =&gt; {
+    console.log('Recipes displayed successfully');
+    // Could continue the chain with more operations
+  })
+  .catch(error =&gt; {
+    console.error('Error in chain:', error.message);
+  });</code></pre>
+  </div>
+
+  <div class="pattern">
+    <h3>2. Promise.all</h3>
+    <p>
+      <code>Promise.all</code> takes an array of promises and returns a single promise that resolves
+      when all the promises in the array have resolved, or rejects if any promise in the array rejects.
+    </p>
+    <pre><code>// In our Recipe Explorer project:
+async function searchMealsByFirstLetter(letters) {
+  try {
+    // Create an array of promises for each letter
+    const promises = letters.map(letter =&gt; {
+      return fetch(`${BASE_URL}/search.php?f=${letter}`)
+        .then(response =&gt; response.json())
+        .then(data =&gt; data.meals || []);
+    });
+
+    // Wait for all promises to resolve
+    const results = await Promise.all(promises);
+
+    // Combine and process the results
+    // ...
+  } catch (error) {
+    console.error('Error:', error.message);
+    return [];
+  }
+}</code></pre>
+  </div>
+
+  <div class="pattern">
+    <h3>3. Promise.race</h3>
+    <p>
+      <code>Promise.race</code> takes an array of promises and returns a single promise that resolves
+      or rejects as soon as one of the promises in the array resolves or rejects.
+    </p>
+    <pre><code>// In our Recipe Explorer project:
+async function getMealsByIngredient(ingredient, timeoutMs = 5000) {
+  try {
+    // Create a timeout promise
+    const timeoutPromise = new Promise((_, reject) =&gt; {
+      setTimeout(() =&gt; reject(new Error('Request timed out')), timeoutMs);
+    });
+
+    // Create the fetch promise
+    const fetchPromise = fetch(`${BASE_URL}/filter.php?i=${ingredient}`)
+      .then(response =&gt; response.json())
+      .then(data =&gt; data.meals || []);
+
+    // Race the fetch against the timeout
+    const result = await Promise.race([fetchPromise, timeoutPromise]);
+    return result;
+  } catch (error) {
+    // Handle timeout or other errors
+    // ...
+  }
+}</code></pre>
+  </div>
+
+  <h2>Async/Await: A Cleaner Way to Work with Promises</h2>
+  <p>
+    The <code>async/await</code> syntax provides a more readable way to work with promises,
+    making asynchronous code look almost like synchronous code.
+  </p>
+
+  <div class="compare">
+    <div>
+      <h4>Using Promises with .then/.catch</h4>
+      <pre><code>function getRecipeDetails(id) {
+  return fetch(`/api/recipes/${id}`)
+    .then(response =&gt; {
+      if (!response.ok) {
+        throw new Error('Network error');
+      }
+      return response.json();
+    })
+    .then(recipe =&gt; {
+      return getIngredients(recipe.id)
+        .then(ingredients =&gt; {
+          recipe.ingredients = ingredients;
+          return recipe;
+        });
+    })
+    .catch(error =&gt; {
+      console.error('Error:', error);
+      return null;
+    });
+}</code></pre>
+    </div>
+    <div>
+      <h4>Using Async/Await</h4>
+      <pre><code>async function getRecipeDetails(id) {
+  try {
+    const response = await fetch(
+      `/api/recipes/${id}`
+    );
+
+    if (!response.ok) {
+      throw new Error('Network error');
+    }
+
+    const recipe = await response.json();
+    const ingredients = await getIngredients(
+      recipe.id
+    );
+
+    recipe.ingredients = ingredients;
+    return recipe;
+  } catch (error) {
+    console.error('Error:', error);
+    return null;
+  }
+}</code></pre>
+    </div>
+  </div>
+
+  <p>
+    The <code>async/await</code> version is more readable because:
+  </p>
+  <ul>
+    <li>It avoids nested callback structures (often called "callback hell")</li>
+    <li>It allows using traditional try/catch blocks for error handling</li>
+    <li>The code reads in a more natural top-to-bottom flow</li>
+  </ul>
+
+  <div class="note">
+    <strong>Note:</strong> Remember that <code>await</code> can only be used inside an <code>async</code> function.
+  </div>
+
+  <h2>Error Handling in Asynchronous Code</h2>
+  <p>
+    Proper error handling is crucial in asynchronous code. Unhandled promise rejections can lead
+    to hard-to-debug issues.
+  </p>
+
+  <div class="example">
+    <h3>Error Handling with Promises</h3>
+    <pre><code>fetchData()
+  .then(data =&gt; processData(data))
+  .then(result =&gt; displayResult(result))
+  .catch(error =&gt; {
+    // This catch will handle errors from fetchData, processData, and displayResult
+    console.error('An error occurred:', error);
+    displayErrorMessage(error.message);
+  })
+  .finally(() =&gt; {
+    // This will run regardless of success or failure
+    hideLoadingIndicator();
+  });</code></pre>
+  </div>
+
+  <div class="example">
+    <h3>Error Handling with Async/Await</h3>
+    <pre><code>async function handleDataProcessing() {
+  try {
+    const data = await fetchData();
+    const result = await processData(data);
+    displayResult(result);
+  } catch (error) {
+    // This catch will handle errors from fetchData, processData, and displayResult
+    console.error('An error occurred:', error);
+    displayErrorMessage(error.message);
+  } finally {
+    // This will run regardless of success or failure
+    hideLoadingIndicator();
+  }
+}</code></pre>
+  </div>
+
+  <h2>Working with the File System in Node.js</h2>
+  <p>
+    In our Recipe Explorer project, we use the Node.js <code>fs/promises</code> module to work with
+    the file system asynchronously. This module provides Promise-based versions of the standard
+    <code>fs</code> functions.
+  </p>
+
+  <div class="example">
+    <h3>File System Operations with Promises</h3>
+    <pre><code>import fs from 'fs/promises';
+import path from 'path';
+
+// Reading a file
+async function readJsonFile(filePath) {
+  try {
+    const data = await fs.readFile(filePath, 'utf8');
+    return JSON.parse(data);
+  } catch (error) {
+    console.error('Error reading file:', error.message);
+    return null;
+  }
+}
+
+// Writing to a file
+async function writeJsonFile(filePath, data) {
+  try {
+    // Ensure the directory exists
+    const dir = path.dirname(filePath);
+    await fs.mkdir(dir, { recursive: true });
+
+    // Write the file
+    await fs.writeFile(filePath, JSON.stringify(data, null, 2));
+    return true;
+  } catch (error) {
+    console.error('Error writing file:', error.message);
+    return false;
+  }
+}</code></pre>
+  </div>
+
+  <h2>Using readline-sync for User Input</h2>
+  <p>
+    In our Recipe Explorer project, we use the <code>readline-sync</code> package to get user input
+    from the command line. Unlike Node.js's built-in <code>readline</code> module, <code>readline-sync</code>
+    provides synchronous versions of input functions, making our code easier to understand.
+  </p>
+
+  <div class="example">
+    <h3>Getting User Input with readline-sync</h3>
+    <pre><code>import readlineSync from 'readline-sync';
+
+// Getting a simple string input
+const name = readlineSync.question('What is your name? ');
+console.log(`Hello, ${name}!`);
+
+// Getting a number with validation
+const age = readlineSync.questionInt('How old are you? ', {
+  limitMessage: 'Please enter a valid number.',
+  min: 0,
+  max: 120
+});
+
+// Yes/No questions
+const likesJavaScript = readlineSync.keyInYN('Do you like JavaScript? ');
+if (likesJavaScript) {
+  console.log('Great choice!');
+} else {
+  console.log('You might change your mind soon!');
+}
+
+// Menu selection
+const options = ['Search recipes', 'View favorites', 'Exit'];
+const index = readlineSync.keyInSelect(options, 'What would you like to do?');
+console.log(`You selected: ${options[index]}`);
+</code></pre>
+  </div>
+
+  <p>
+    While <code>readline-sync</code> is not asynchronous, it integrates well with our async code because:
+  </p>
+  <ul>
+    <li>It pauses execution to wait for input, making our CLI easier to follow</li>
+    <li>We use it within async functions, so the rest of our application can still use async patterns</li>
+    <li>It simplifies our code by avoiding callback-based input handling</li>
+  </ul>
+
+  <h2>Bringing It All Together: Common Async Patterns</h2>
+
+  <h3>1. Sequential Execution</h3>
+  <p>
+    When you need to perform multiple asynchronous operations in sequence:
+  </p>
+  <pre><code>async function processingSequence() {
+  // Each step waits for the previous one to complete
+  const data = await fetchData();
+  const processed = await processData(data);
+  const result = await saveResult(processed);
+  return result;
+}</code></pre>
+
+  <h3>2. Parallel Execution</h3>
+  <p>
+    When you need to perform multiple independent operations at the same time:
+  </p>
+  <pre><code>async function parallelProcessing() {
+  // All operations start at the same time
+  const [users, products, orders] = await Promise.all([
+    fetchUsers(),
+    fetchProducts(),
+    fetchOrders()
+  ]);
+
+  return { users, products, orders };
+}</code></pre>
+
+  <h3>3. Race Conditions</h3>
+  <p>
+    When you want to proceed with the first completed operation:
+  </p>
+  <pre><code>async function fetchWithTimeout(url, timeout) {
+  const fetchPromise = fetch(url);
+  const timeoutPromise = new Promise((_, reject) =&gt; {
+    setTimeout(() =&gt; reject(new Error('Request timed out')), timeout);
+  });
+
+  // Use the result of whichever promise resolves/rejects first
+  return Promise.race([fetchPromise, timeoutPromise]);
+}</code></pre>
+
+  <h3>4. Retry Logic</h3>
+  <p>
+    When you want to retry an operation that might fail:
+  </p>
+  <pre><code>async function fetchWithRetry(url, maxAttempts = 3) {
+  let lastError;
+
+  for (let attempt = 1; attempt &lt;= maxAttempts; attempt++) {
+    try {
+      return await fetch(url); // Return on success
+    } catch (error) {
+      console.log(`Attempt ${attempt} failed. Retrying...`);
+      lastError = error;
+
+      // Wait before retrying (with exponential backoff)
+      await new Promise(resolve =&gt; setTimeout(resolve, 1000 * attempt));
+    }
+  }
+
+  // If we get here, all attempts failed
+  throw new Error(`Failed after ${maxAttempts} attempts: ${lastError.message}`);
+}</code></pre>
+
+  <h2>Further Learning Resources</h2>
+  <ul>
+    <li><a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Guide/Using_promises">MDN:
+        Using Promises</a></li>
+    <li><a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Statements/async_function">MDN:
+        Async/Await</a></li>
+    <li><a href="https://nodejs.org/api/fs.html#promises-api">Node.js: fs/promises API</a></li>
+    <li><a href="https://nodejs.org/api/readline.html">Node.js: readline module</a></li>
+    <li><a href="https://www.npmjs.com/package/readline-sync">readline-sync package documentation</a>
+    </li>
+  </ul>
+
+  <p>
+    <a href="assignment.html">Back to Assignment</a>
+  </p>
+</body>
+
+</html>
