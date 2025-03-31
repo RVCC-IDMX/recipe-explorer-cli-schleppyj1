@@ -10,7 +10,7 @@ const BASE_URL = 'https://www.themealdb.com/api/json/v1/1';
  * Search for meals by name
  * @param {string} query - Search term
  * @returns {Promise<Array>} - Array of meal objects
- * 
+ *
  * @see {@link https://developer.mozilla.org/en-US/docs/Web/API/fetch | MDN: fetch API}
  * @see {@link https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Promise | MDN: Promise}
  * @see {@link https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Statements/try...catch | MDN: try...catch}
@@ -23,18 +23,37 @@ export async function searchMealsByName(query) {
   // 4. Parse the JSON response (response.json())
   // 5. Return data.meals or an empty array if meals is null
   // 6. Wrap everything in a try/catch block and return empty array on error
-  
-  // YOUR CODE HERE
+
+  try {
+    console.log("Commencing searchMealsByName");
+
+    const response = await fetch(`${BASE_URL}/search.php?s=${encodeURIComponent(query)}`);
+    if (!response.ok) {
+      throw new Error(`Response status: ${response.status}`);
+    }
+
+    const json = await response.json();
+    console.log("json = " + json);
+    if (json.meals != null) {
+      return json.meals;
+    }
+    else {
+      return [];
+    }
+  } catch (error) {
+    console.error(error.message);
+    return [];
+  }
 }
 
 /**
  * Get detailed information about a specific meal by ID
  * Implementation includes retry logic for resilience
- * 
+ *
  * @param {string} id - Meal ID
  * @param {number} attempts - Number of retry attempts (default: 2)
  * @returns {Promise<Object|null>} - Meal details or null if not found
- * 
+ *
  * @see {@link https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Statements/async_function | MDN: async function}
  * @see {@link https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Operators/await | MDN: await}
  * @see {@link https://developer.mozilla.org/en-US/docs/Web/JavaScript/Guide/Control_flow_and_error_handling | MDN: Error handling}
@@ -49,16 +68,56 @@ export async function getMealById(id, attempts = 2) {
   // 5. Decrement attempts and call the function recursively
   // 6. Handle errors with try/catch
 
-  // YOUR CODE HERE
+  try {
+    const response = await fetch(`${BASE_URL}/lookup.php?i=${id}`);
+    if (!response.ok) {
+      if (attempts >= 1) {
+        await new Promise(resolve => setTimeout(resolve, 1000));
+        attempts--;
+        return getMealById(id, attempts);
+      }
+
+      else {
+        throw new Error(`Response status: ${response.status}`);
+      }
+
+    }
+
+    else {
+      const json = await response.json();
+      if (json.meals != null) {
+        return json.meals[0];
+      }
+
+      else {
+        return null;
+      }
+    }
+
+  }
+
+  catch {
+    if (attempts >= 1) {
+      await new Promise(resolve => setTimeout(resolve, 1000));
+      attempts--;
+      return getMealById(id, attempts);
+    }
+
+    else {
+      //  throw new Error("Get meal by id error.");
+      return getMealById(id, attempts);
+    }
+
+  }
 }
 
 /**
  * Search for meals starting with specific letters
  * Uses Promise.all to fetch results for multiple letters in parallel
- * 
+ *
  * @param {Array<string>} letters - Array of letters to search by
  * @returns {Promise<Array>} - Combined array of meals starting with any of the letters
- * 
+ *
  * @see {@link https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Promise/all | MDN: Promise.all}
  * @see {@link https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Array/map | MDN: Array.map}
  * @see {@link https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Set | MDN: Set}
@@ -75,18 +134,68 @@ export async function searchMealsByFirstLetter(letters) {
   // 4. Combine results and remove duplicates (using meal IDs and Set)
   // 5. Return the combined array of meals
   // 6. Wrap in a try/catch block
+  try {
+    console.log("Commencing searchMealsByFirstLetter");
+    const promises = letters.map(async (letter) => {
+      const response = await fetch(`${BASE_URL}/search.php?f=${letter.charAt(0)}`);
+      if (response.ok) {
+        console.log("Response ok: " + response.status);
+        return response.json();
+      }
 
-  // YOUR CODE HERE
+      else {
+        console.log("Error retreiving data: " + response.status);
+        return [];
+      }
+
+    });
+
+
+    const results = await Promise.all(promises);
+
+    let fullMealsArray = [];
+
+    results.forEach(json => {
+
+      if (json.meals != null) {
+        json.meals.forEach(meal => {
+          fullMealsArray.push(meal);
+        });
+      }
+
+    });
+
+    console.log("fullMealsArray length: " + fullMealsArray.length);
+
+    const mealIdsSet = new Set();
+    const uniqueMeals = fullMealsArray.filter(meal => {
+      if (mealIdsSet.has(meal.idMeal)) {
+        return false;
+      } else {
+        mealIdsSet.add(meal.idMeal);
+        return true;
+      }
+    });
+
+    console.log("uniqueMeals length: " + uniqueMeals.length);
+    return uniqueMeals;
+
+
+  } catch (e) {
+    console.error("searchMealsByFirstLetter error: " + e);
+    return []
+  }
+
 }
 
 /**
  * Search for meals containing a specific ingredient
  * Implements a timeout using Promise.race
- * 
+ *
  * @param {string} ingredient - Ingredient to search for
  * @param {number} timeoutMs - Timeout in milliseconds
  * @returns {Promise<Array|string>} - Array of meals or error message if timeout
- * 
+ *
  * @see {@link https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Promise/race | MDN: Promise.race}
  * @see {@link https://developer.mozilla.org/en-US/docs/Web/JavaScript/Guide/Using_promises | MDN: Using promises}
  * @see {@link https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Operators/typeof | MDN: typeof}
@@ -102,17 +211,49 @@ export async function getMealsByIngredient(ingredient, timeoutMs = 5000) {
   // 4. Return the result (either meals array or error message)
   // 5. Handle errors and return a user-friendly message if timeout occurs
 
-  // YOUR CODE HERE
+  try {
+    const timeoutPromise = new Promise((_, reject) => {
+      // Reject after timeoutMs milliseconds
+      setTimeout(() => {
+        reject(new Error('Request timed out'));
+      }, timeoutMs);
+    });
+
+    const fetchPromise = fetch(`${BASE_URL}/filter.php?i=${encodeURIComponent(ingredient)}`).then(response => {
+      if (!response.ok) {
+        throw new Error(`API error: ${response.status}`);
+      }
+      return response.json();
+    }).then(data => {
+      // Check if meals exist in the response
+      if (data.meals) {
+        return data.meals; // Return the meals array
+      } else {
+        return []; // Return empty array if no meals found
+      }
+    });
+
+    const result = await Promise.race([fetchPromise, timeoutPromise]);
+
+
+    return result;
+  } catch (error) {
+    console.error('Error fetching meals by ingredient:', error.message);
+    if (error.message.includes("Request timed out")) {
+      return `The request for meals with "${ingredient}" took too long. Please try again later.`;
+    }
+    return [];
+  }
 }
 
 /**
  * Get related recipes based on a recipe's category
  * Used in promise chaining examples
- * 
+ *
  * @param {Object} recipe - Recipe object with strCategory property
  * @param {number} limit - Maximum number of related recipes to return
  * @returns {Promise<Array>} - Array of related recipes
- * 
+ *
  * @see {@link https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Array/filter | MDN: Array.filter}
  * @see {@link https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Array/slice | MDN: Array.slice}
  */
@@ -126,12 +267,39 @@ export async function getRelatedRecipes(recipe, limit = 3) {
   // 6. Return the filtered & limited array
   // 7. Handle errors with try/catch
 
-  // YOUR CODE HERE
+  try {
+
+    if (recipe != null && recipe.strCategory != null && recipe.strCategory != 'undefined') {
+      return [];
+    }
+
+    const response = await fetch(`${BASE_URL}/filter.php?c=${encodeURIComponent(recipe.strCategory)}`);
+
+    if (!response.ok) {
+      throw new Error(`API error: ${response.status}`);
+    }
+
+    const data = await response.json();
+
+    const meals = data.meals || [];
+
+    const filtered = meals.filter((meal) => meal.idMeal !== recipe.idMeal);
+
+    return filtered.slice(0, limit);
+  }
+
+  catch (error) {
+    error;
+    console.error('Error fetching related recipes: ', error);
+    return [];
+  }
+
+
 }
 
 /**
  * Get a random meal from the API
- * 
+ *
  * @returns {Promise<Object|null>} - Random meal or null if error
  */
 export async function getRandomMeal() {
@@ -141,7 +309,26 @@ export async function getRandomMeal() {
   // 3. Return the first meal or null if no meals
   // 4. Handle errors with try/catch
 
-  // YOUR CODE HERE
+  try {
+    console.log("Commencing getRandomMeal");
+
+    const response = await fetch(`${BASE_URL}/random.php`);
+    if (!response.ok) {
+      throw new Error(`Response status: ${response.status}`);
+    }
+
+    const json = await response.json();
+    if (json.meals != null) {
+      console.log("meal = " + JSON.stringify(json.meals[0]));
+      return json.meals[0];
+    }
+    else {
+      return [];
+    }
+  } catch (error) {
+    console.error(error.message);
+    return [];
+  }
 }
 
 export default {
